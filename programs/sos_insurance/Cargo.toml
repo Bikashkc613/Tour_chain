@@ -1,0 +1,26 @@
+[package]
+name = "sos_insurance"
+version = "0.1.0"
+description = "TourismChain Nepal: SOS & Parametric Insurance"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "sos_insurance"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build"]
+anchor-debug = []
+custom-heap = []
+custom-panic = []
+
+[dependencies]
+anchor-lang = "1.0.0"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }

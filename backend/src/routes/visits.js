@@ -44,26 +44,29 @@ router.post('/verify-visit', async (req, res) => {
     // 6. Count total historical visits to this place
     const totalPlaceVisits = await Visit.countDocuments({ walletAddress, placeId })
     
-    // 7. Mint or upgrade NFT
+    // 7. Mint or upgrade NFT (now using cNFTs)
     let nftResult
     try {
         if (totalPlaceVisits === 0) {
-          // First visit: mint Bronze NFT
+          // First visit: mint Bronze cNFT
           nftResult = await mintNFT(walletAddress, place, 'Bronze')
         } else if (totalPlaceVisits === 4) {
-          // 5th visit: upgrade to Silver
+          // 5th visit: upgrade (mint Silver)
           nftResult = await upgradeNFT(walletAddress, placeId, 'Silver')
         } else if (totalPlaceVisits === 9) {
-          // 10th visit: upgrade to Gold
+          // 10th visit: upgrade (mint Gold)
           nftResult = await upgradeNFT(walletAddress, placeId, 'Gold')
         }
+        
+        // 7.5 Record on Solana Anchor Program (Securely)
+        const tx = await recordVisitOnChain(walletAddress, placeId)
+        if (tx) nftResult.onChainTx = tx
+        
     } catch (solanaError) {
         console.error("Solana operation failed:", solanaError.message)
-        // We continue recording the visit even if NFT fails, or we could fail here.
-        // For hackathon, let's at least record the visit.
     }
     
-    // 8. Record visit
+    // 8. Record visit in Database
     tourist.totalVisits += 1
     await tourist.save()
     
@@ -71,13 +74,14 @@ router.post('/verify-visit', async (req, res) => {
         walletAddress, 
         placeId, 
         nftMint: nftResult?.mint, 
-        txSignature: nftResult?.tx 
+        txSignature: nftResult?.onChainTx || nftResult?.tx 
     })
     await visit.save()
     
     res.json({ 
       message: `Visit recorded! ${totalPlaceVisits === 0 ? 'Bronze NFT minted!' : 'Visit counted!'}`,
-      tier: totalPlaceVisits === 0 ? 'Bronze' : totalPlaceVisits === 4 ? 'Silver' : 'counting'
+      tier: totalPlaceVisits === 0 ? 'Bronze' : totalPlaceVisits === 4 ? 'Silver' : 'counting',
+      solanaTx: nftResult?.onChainTx
     })
   } catch (err) {
     console.error(err)

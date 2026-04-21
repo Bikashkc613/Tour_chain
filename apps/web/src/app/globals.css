@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+::view-transition-group(*),
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation-duration: 0.25s;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  
+  --color-himalayan-blue: #1a2b4a;
+  --color-summit-white: #f5f0e8;
+  --color-trekker-orange: #e07b39;
+  --color-forest-green: #2d6a4f;
+  --color-prayer-red: #d62828;
+  --color-prayer-yellow: #fcbf49;
+
+  --font-playfair: var(--font-playfair-display);
+  --font-dm-sans: var(--font-dm-sans);
+}
+
+:root {
+  --background: #f5f0e8; /* Summit White */
+  --foreground: #1a2b4a; /* Himalayan Blue */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0f172a;
+    --foreground: #f5f0e8;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  @apply antialiased;
+}
+
+@layer utilities {
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl;
+  }
+  
+  .glass-morphism {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-himalayan-blue to-trekker-orange;
+  }
+  
+  .himalayan-gradient {
+    background: linear-gradient(135deg, #1a2b4a, #d62828, #e07b39);
+    background-size: 400% 400%;
+    animation: gradient-shift 15s ease infinite;
+  }
+
+  .animate-reveal {
+    animation: reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}

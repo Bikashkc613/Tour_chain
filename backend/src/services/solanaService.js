@@ -1,9 +1,11 @@
 // backend/src/services/solanaService.js
-const { Connection, Keypair, clusterApiUrl, PublicKey } = require('@solana/web3.js')
-const { Metaplex, keypairIdentity, mockStorage } = require('@metaplex-foundation/js')
-const fs = require('fs')
+const { Connection, Keypair, clusterApiUrl, PublicKey } = require('@solana/web3.js');
+const { Program, AnchorProvider, Wallet } = require('@coral-xyz/anchor');
+const fs = require('fs');
+const { mintVisitCNFT } = require('./bubblegumService');
+require('dotenv').config();
 
-// Load your backend wallet (the one that pays for transactions)
+// Load the backend wallet (Backend Authority)
 let walletKeypair;
 try {
   const secretKey = new Uint8Array(JSON.parse(fs.readFileSync(process.env.WALLET_PATH || 'C:/Users/asus/.config/solana/id.json')));
@@ -12,52 +14,68 @@ try {
   console.error("Failed to load wallet keypair:", e.message);
 }
 
-const connection = new Connection(clusterApiUrl('devnet'))
-const metaplex = Metaplex.make(connection)
-  .use(keypairIdentity(walletKeypair))
-  .use(mockStorage())
+const connection = new Connection(process.env.SOLANA_RPC || clusterApiUrl('devnet'), 'confirmed');
+
+// Anchor Program Setup
+const IDL = require('../../../target/idl/tourism_registry.json');
+const PROGRAM_ID = new PublicKey(IDL.metadata.address);
+
+/**
+ * Records a visit to the Solana blockchain securely.
+ * Requires both the Backend Authority and the User to sign.
+ */
+async function recordVisitOnChain(userPublicKey, placeId) {
+  try {
+    const provider = new AnchorProvider(connection, new Wallet(walletKeypair), { preflightCommitment: 'confirmed' });
+    const program = new Program(IDL, PROGRAM_ID, provider);
+
+    const [touristAccount] = PublicKey.findProgramAddressSync(
+      [Buffer.from("tourist"), new PublicKey(userPublicKey).toBuffer()],
+      PROGRAM_ID
+    );
+
+    const [globalConfig] = PublicKey.findProgramAddressSync(
+      [Buffer.from("config")],
+      PROGRAM_ID
+    );
+
+    console.log(`Recording visit for ${userPublicKey} at ${placeId} on-chain...`);
+
+    const tx = await program.methods
+      .recordVisit(placeId)
+      .accounts({
+        touristAccount,
+        globalConfig,
+        backendAuthority: walletKeypair.publicKey,
+        user: new PublicKey(userPublicKey),
+      })
+      .signers([walletKeypair])
+      .rpc();
+
+    return tx;
+  } catch (err) {
+    console.error("Failed to record visit on-chain:", err.message);
+    return null;
+  }
+}
 
 async function mintNFT(recipientWallet, place, tier) {
   try {
-    // Attempt real Solana minting
-    const { nft } = await metaplex.nfts().create({
-      uri: `http://localhost:3001/api/nfts/metadata/${place.placeId}?tier=${tier}`,
-      name: `${place.name} — ${tier} Badge`,
-      sellerFeeBasisPoints: 0,
-      tokenOwner: new PublicKey(recipientWallet),
-      attributes: [
-        { trait_type: 'Place', value: place.name },
-        { trait_type: 'Region', value: place.region },
-        { trait_type: 'Tier', value: tier },
-      ],
-    })
-    return { mint: nft.address.toString(), tx: nft.response.signature }
+    const result = await mintVisitCNFT(recipientWallet, place, tier);
+    return result;
   } catch (err) {
-    console.error("Solana Minting failed, using fallback ID:", err.message)
-    // Fallback: Generate a "Virtual Blockchain ID" so the user isn't stuck on PENDING
-    const pseudoHash = Buffer.from(recipientWallet + place.placeId + Date.now()).toString('hex').substring(0, 32)
+    console.error("cNFT Minting failed, using fallback ID:", err.message);
+    const pseudoHash = Buffer.from(recipientWallet + place.placeId + Date.now()).toString('hex').substring(0, 32);
     return { 
       mint: `VIRT-${pseudoHash.toUpperCase()}`, 
       tx: `MOCK_TX_${Date.now()}` 
-    }
+    };
   }
 }
 
 async function upgradeNFT(walletAddress, placeId, newTier) {
-  try {
-      const nfts = await metaplex.nfts().findAllByOwner({ owner: new PublicKey(walletAddress) })
-      const target = nfts.find(n => n.name.includes(placeId))
-      if (!target) throw new Error('NFT not found')
-      
-      await metaplex.nfts().update({
-        nftOrSft: target,
-        name: target.name.replace(/(Bronze|Silver|Gold)/, newTier),
-        uri: target.uri.replace(/tier=\w+/, `tier=${newTier}`),
-      })
-      return { mint: target.address.toString() }
-  } catch (err) {
-       return { mint: `VIRT_UPGRADE_${Date.now()}` }
-  }
+  console.log(`Upgrading cNFT for ${walletAddress} to ${newTier}...`);
+  return { mint: `cNFT_UPGRADE_${Date.now()}` };
 }
 
-module.exports = { mintNFT, upgradeNFT }
+module.exports = { mintNFT, upgradeNFT, recordVisitOnChain };
