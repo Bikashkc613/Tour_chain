@@ -4,8 +4,23 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, Shield, Map, Award } from "lucide-react";
+import { useEffect, useState } from "react";
+
+interface PlatformStats {
+  tourists: number;
+  nftsMinted: number;
+  activeBookings: number;
+}
 
 export default function Home() {
+  const [stats, setStats] = useState<PlatformStats | null>(null);
+
+  useEffect(() => {
+    fetch("/api/stats")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => d && setStats(d))
+      .catch(() => {});
+  }, []);
   return (
     <main className="relative min-h-screen bg-summit-white text-himalayan-blue overflow-hidden">
       {/* Parallax Hero */}
@@ -73,13 +88,22 @@ export default function Home() {
         <div className="absolute bottom-0 w-full bg-himalayan-blue/80 backdrop-blur-lg border-t border-white/10 py-6">
           <div className="max-w-7xl mx-auto px-4 flex flex-wrap justify-center gap-8 md:gap-20 text-summit-white/80 font-dm-sans text-sm uppercase tracking-widest">
             <div className="flex items-center gap-2">
-              <span className="text-trekker-orange font-bold text-lg">1,248</span> Tourists Onboarded
+              <span className="text-trekker-orange font-bold text-lg">
+                {stats ? stats.tourists.toLocaleString() : "—"}
+              </span>{" "}
+              Tourists Onboarded
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-trekker-orange font-bold text-lg">4,520 SOL</span> in Escrow
+              <span className="text-trekker-orange font-bold text-lg">
+                {stats ? stats.activeBookings.toLocaleString() : "—"}
+              </span>{" "}
+              Active Bookings
             </div>
             <div className="flex items-center gap-1">
-              <span className="text-trekker-orange font-bold text-lg">8,912</span> NFTs Minted
+              <span className="text-trekker-orange font-bold text-lg">
+                {stats ? stats.nftsMinted.toLocaleString() : "—"}
+              </span>{" "}
+              NFTs Minted
             </div>
           </div>
         </div>

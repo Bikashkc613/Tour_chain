@@ -4,8 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-// Note: In a production app, the token should be in an environment variable
-mapboxgl.accessToken = 'pk.eyJ1IjoiYm9va2luZy1jaGFpbiIsImEiOiJjbHZqM2ZqM20wM2ZzMmpvNXE4eGZndW85In0.placeholder'; 
+mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? '';
 
 interface MapProps {
   center?: [number, number];
