@@ -6,19 +6,13 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-tourism_registry = "2GWdm3guUBQBLdA3VB9ECAwzN6UdpEMgs2VrKHiKfBXy"
-booking_escrow = "11111111111111111111111111111111"
-experience_nft = "11111111111111111111111111111111"
-loyalty_token = "11111111111111111111111111111111"
-dao_governance = "11111111111111111111111111111111"
-route_registry = "11111111111111111111111111111111"
-carbon_credits = "11111111111111111111111111111111"
-pricing_oracle = "11111111111111111111111111111111"
-sos_insurance = "11111111111111111111111111111111"
+tourchain_reputation = "2GWdm3guUBQBLdA3VB9ECAwzN6UdpEMgs2VrKHiKfBXy"
+tourchain_escrow = "11111111111111111111111111111111"
+tourchain_proof = "11111111111111111111111111111111"
 
 [provider]
 cluster = "devnet"
-wallet = '~\.config\solana\id.json'
+wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "cargo test"

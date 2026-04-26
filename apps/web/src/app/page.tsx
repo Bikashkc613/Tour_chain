@@ -4,8 +4,26 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, Shield, Map, Award } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function Home() {
+  const [stats, setStats] = useState({ tourists: 0, totalEscrowUsd: 0, proofs: 0 });
+
+  useEffect(() => {
+    const load = async () => {
+      const res = await fetch("/api/stats");
+      const payload = await res.json();
+      if (res.ok) {
+        setStats({
+          tourists: payload.tourists ?? 0,
+          totalEscrowUsd: payload.totalEscrowUsd ?? 0,
+          proofs: payload.proofs ?? 0,
+        });
+      }
+    };
+    void load();
+  }, []);
+
   return (
     <main className="relative min-h-screen bg-summit-white text-himalayan-blue overflow-hidden">
       {/* Parallax Hero */}
@@ -44,7 +62,7 @@ export default function Home() {
             className="text-xl md:text-2xl text-summit-white/90 mb-10 font-dm-sans max-w-3xl mx-auto"
           >
             The Solana-native tourism rails for Nepal. Trustless bookings, 
-            verifiable experiences, and a reputation layer for the world's highest trails.
+            verifiable experiences, and a reputation layer for the world&apos;s highest trails.
           </motion.p>
 
           <motion.div 
@@ -73,13 +91,13 @@ export default function Home() {
         <div className="absolute bottom-0 w-full bg-himalayan-blue/80 backdrop-blur-lg border-t border-white/10 py-6">
           <div className="max-w-7xl mx-auto px-4 flex flex-wrap justify-center gap-8 md:gap-20 text-summit-white/80 font-dm-sans text-sm uppercase tracking-widest">
             <div className="flex items-center gap-2">
-              <span className="text-trekker-orange font-bold text-lg">1,248</span> Tourists Onboarded
+              <span className="text-trekker-orange font-bold text-lg">{stats.tourists.toLocaleString()}</span> Tourists Onboarded
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-trekker-orange font-bold text-lg">4,520 SOL</span> in Escrow
+              <span className="text-trekker-orange font-bold text-lg">${Math.round(stats.totalEscrowUsd).toLocaleString()}</span> in Escrow
             </div>
             <div className="flex items-center gap-1">
-              <span className="text-trekker-orange font-bold text-lg">8,912</span> NFTs Minted
+              <span className="text-trekker-orange font-bold text-lg">{stats.proofs.toLocaleString()}</span> NFTs Minted
             </div>
           </div>
         </div>
