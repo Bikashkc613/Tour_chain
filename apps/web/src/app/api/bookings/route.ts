@@ -36,14 +36,14 @@ type BookingRowSol = {
 export async function GET() {
   const supabase = await createClient();
   if (!supabase) {
-    return jsonOk({ bookings: [] });
+    return jsonError(401, "unauthorized", "Supabase is not configured");
   }
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return jsonOk({ bookings: [] });
+    return jsonError(401, "unauthorized", "You must be logged in to view bookings");
   }
 
   const { data: profile } = await supabase.from("users").select("role").eq("id", user.id).maybeSingle();

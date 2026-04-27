@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 type Booking = {
   id: string;
@@ -13,12 +14,6 @@ type Booking = {
   service?: { title?: string } | null;
 };
 
-const DEMO_BOOKINGS: Booking[] = [
-  { id: "db1", status: "confirmed", start_date: "2026-05-10", end_date: "2026-05-17", total_price_usd: 320, route: { name: "Poon Hill Trek" }, service: { title: "Premium Guide Package" } },
-  { id: "db2", status: "active",    start_date: "2026-04-20", end_date: "2026-05-02", total_price_usd: 780, route: { name: "Annapurna Circuit" }, service: { title: "Full Support Trek" } },
-  { id: "db3", status: "completed", start_date: "2026-03-01", end_date: "2026-03-14", total_price_usd: 1200, route: { name: "Everest Base Camp" }, service: { title: "Luxury Trek" } },
-];
-
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string; border: string; icon: string }> = {
   confirmed: { label: "Confirmed", color: "text-blue-700",    bg: "bg-blue-50",    border: "border-blue-200",   icon: "✅" },
   active:    { label: "Active",    color: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200", icon: "🚶" },
@@ -27,7 +22,7 @@ const STATUS_MAP: Record<string, { label: string; color: string; bg: string; bor
   cancelled: { label: "Cancelled", color: "text-red-600",     bg: "bg-red-50",     border: "border-red-200",    icon: "❌" },
 };
 
-function AnimatedNumber({ value, prefix = "", suffix = "" }: { value: number; prefix?: string; suffix?: string }) {
+function AnimatedNumber({ value, prefix = "" }: { value: number; prefix?: string }) {
   const [display, setDisplay] = useState(0);
   useEffect(() => {
     let start = 0;
@@ -39,7 +34,7 @@ function AnimatedNumber({ value, prefix = "", suffix = "" }: { value: number; pr
     }, 25);
     return () => clearInterval(t);
   }, [value]);
-  return <>{prefix}{typeof value === "number" && value % 1 !== 0 ? display.toFixed(2) : display}{suffix}</>;
+  return <>{prefix}{display}</>;
 }
 
 function StatCard({ icon, label, value, sub, accent }: { icon: string; label: string; value: React.ReactNode; sub?: string; accent: string }) {
@@ -78,14 +73,12 @@ function BookingRow({ booking, index }: { booking: Booking; index: number }) {
   const start = new Date(booking.start_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   const end = booking.end_date ? new Date(booking.end_date).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : null;
 
+  const progressPct = booking.status === "active" && booking.end_date
+    ? Math.min(100, Math.round(((Date.now() - new Date(booking.start_date).getTime()) / (new Date(booking.end_date).getTime() - new Date(booking.start_date).getTime())) * 100))
+    : null;
+
   return (
-    <div
-      style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? "translateX(0)" : "translateX(-20px)",
-        transition: "opacity 0.4s ease, transform 0.4s ease",
-      }}
-    >
+    <div style={{ opacity: visible ? 1 : 0, transform: visible ? "translateX(0)" : "translateX(-20px)", transition: "opacity 0.4s ease, transform 0.4s ease" }}>
       <div
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
@@ -99,23 +92,20 @@ function BookingRow({ booking, index }: { booking: Booking; index: number }) {
       >
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0" style={{ background: `${cfg.bg}` }}>
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 ${cfg.bg}`}>
               {cfg.icon}
             </div>
             <div>
               <p className="font-bold text-gray-900">{title}</p>
-              <p className="text-sm text-gray-500">
-                {start}{end ? ` → ${end}` : ""}
-              </p>
+              <p className="text-sm text-gray-500">{start}{end ? ` → ${end}` : ""}</p>
               {booking.service?.title && booking.route?.name && (
                 <p className="text-xs text-gray-400">{booking.service.title}</p>
               )}
             </div>
           </div>
-
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="font-bold text-gray-900 text-lg">${booking.total_price_usd.toFixed(2)}</p>
+              <p className="font-bold text-gray-900 text-lg">${Number(booking.total_price_usd).toFixed(2)}</p>
               <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full border ${cfg.bg} ${cfg.border} ${cfg.color}`}>
                 {cfg.label}
               </span>
@@ -128,21 +118,14 @@ function BookingRow({ booking, index }: { booking: Booking; index: number }) {
             </Link>
           </div>
         </div>
-
-        {/* Progress bar for active bookings */}
-        {booking.status === "active" && booking.end_date && (
+        {progressPct !== null && (
           <div className="mt-3 pt-3 border-t border-gray-100">
             <div className="flex justify-between text-xs text-gray-400 mb-1">
               <span>Journey in progress</span>
-              <span>{Math.min(100, Math.round(((Date.now() - new Date(booking.start_date).getTime()) / (new Date(booking.end_date).getTime() - new Date(booking.start_date).getTime())) * 100))}% complete</span>
+              <span>{progressPct}% complete</span>
             </div>
             <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-700"
-                style={{
-                  width: `${Math.min(100, Math.round(((Date.now() - new Date(booking.start_date).getTime()) / (new Date(booking.end_date).getTime() - new Date(booking.start_date).getTime())) * 100))}%`
-                }}
-              />
+              <div className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-700" style={{ width: `${progressPct}%` }} />
             </div>
           </div>
         )}
@@ -152,10 +135,13 @@ function BookingRow({ booking, index }: { booking: Booking; index: number }) {
 }
 
 export default function TouristDashboard() {
+  const router = useRouter();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [authState, setAuthState] = useState<"checking" | "authed" | "unauthed">("checking");
   const [filter, setFilter] = useState("all");
   const [greeting, setGreeting] = useState("Welcome back");
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
     const h = new Date().getHours();
@@ -166,31 +152,68 @@ export default function TouristDashboard() {
 
   useEffect(() => {
     const load = async () => {
-      try {
-        const res = await fetch("/api/bookings");
-        const payload = await res.json();
-        if (res.ok && payload.bookings?.length) {
-          setBookings(payload.bookings);
-        } else {
-          setBookings(DEMO_BOOKINGS);
-        }
-      } catch {
-        setBookings(DEMO_BOOKINGS);
+      const res = await fetch("/api/bookings");
+      const payload = await res.json();
+
+      // 401 = unauthenticated — redirect to login
+      if (res.status === 401) {
+        setAuthState("unauthed");
+        router.push("/login?next=/dashboard");
+        return;
       }
+
+      // Any other non-ok status
+      if (!res.ok) {
+        setAuthState("authed");
+        setLoaded(true);
+        return;
+      }
+
+      setAuthState("authed");
+      setBookings(payload.bookings ?? []);
+      setUserEmail(payload.user?.email ?? null);
       setLoaded(true);
     };
     void load();
-  }, []);
+  }, [router]);
 
   const totalSpent = useMemo(() => bookings.reduce((a, b) => a + Number(b.total_price_usd || 0), 0), [bookings]);
-  const activeCount = useMemo(() => bookings.filter(b => ["pending","confirmed","active"].includes(b.status)).length, [bookings]);
+  const activeCount = useMemo(() => bookings.filter(b => ["pending", "confirmed", "active"].includes(b.status)).length, [bookings]);
   const completedCount = useMemo(() => bookings.filter(b => b.status === "completed").length, [bookings]);
 
   const filtered = bookings.filter(b => {
-    if (filter === "active") return ["confirmed","active","pending"].includes(b.status);
+    if (filter === "active") return ["confirmed", "active", "pending"].includes(b.status);
     if (filter === "completed") return b.status === "completed";
     return true;
   });
+
+  // Show loading spinner while checking auth
+  if (authState === "checking") {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "linear-gradient(160deg, #fafbff 0%, #fff8f2 50%, #f4fff8 100%)" }}>
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-500 text-sm">Checking your session…</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect is happening
+  if (authState === "unauthed") {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "linear-gradient(160deg, #fafbff 0%, #fff8f2 50%, #f4fff8 100%)" }}>
+        <div className="text-center">
+          <div className="text-5xl mb-4">🔒</div>
+          <p className="text-gray-700 font-semibold text-lg">Please log in to view your dashboard</p>
+          <p className="text-gray-400 text-sm mt-1 mb-6">Redirecting you to login…</p>
+          <Link href="/login?next=/dashboard" className="bg-orange-500 text-white font-bold px-6 py-3 rounded-xl hover:bg-orange-400 transition-colors">
+            Log In Now →
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pb-16" style={{ background: "linear-gradient(160deg, #fafbff 0%, #fff8f2 50%, #f4fff8 100%)" }}>
@@ -203,7 +226,7 @@ export default function TouristDashboard() {
             <h1 className="text-5xl font-bold text-gray-900" style={{ fontFamily: "Georgia, serif" }}>
               Trekker <span className="text-orange-500">Dashboard</span>
             </h1>
-            <p className="text-gray-500 mt-2">Your Himalayan journey at a glance.</p>
+            {userEmail && <p className="text-gray-400 text-sm mt-1">{userEmail}</p>}
           </div>
           <Link
             href="/explore"
@@ -215,36 +238,18 @@ export default function TouristDashboard() {
 
         {/* Stats */}
         <div className="grid sm:grid-cols-3 gap-5 mb-10">
-          <StatCard
-            icon="🧭"
-            label="Active Bookings"
-            value={loaded ? <AnimatedNumber value={activeCount} /> : "—"}
-            sub="In progress or confirmed"
-            accent="#f97316"
-          />
-          <StatCard
-            icon="💰"
-            label="Total Spent"
-            value={loaded ? <AnimatedNumber value={totalSpent} prefix="$" /> : "—"}
-            sub="Across all bookings"
-            accent="#10b981"
-          />
-          <StatCard
-            icon="🏆"
-            label="Completed Treks"
-            value={loaded ? <AnimatedNumber value={completedCount} /> : "—"}
-            sub="NFT proofs eligible"
-            accent="#6366f1"
-          />
+          <StatCard icon="🧭" label="Active Bookings" value={loaded ? <AnimatedNumber value={activeCount} /> : "—"} sub="In progress or confirmed" accent="#f97316" />
+          <StatCard icon="💰" label="Total Spent" value={loaded ? `$${totalSpent.toFixed(2)}` : "—"} sub="Across all bookings" accent="#10b981" />
+          <StatCard icon="🏆" label="Completed Treks" value={loaded ? <AnimatedNumber value={completedCount} /> : "—"} sub="NFT proofs eligible" accent="#6366f1" />
         </div>
 
         {/* Quick actions */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
           {[
             { href: "/explore", icon: "🗺️", label: "Explore" },
-            { href: "/vibe", icon: "🎖️", label: "My NFTs" },
-            { href: "/dao", icon: "⚖️", label: "DAO" },
-            { href: "/nft", icon: "✨", label: "Mint NFT" },
+            { href: "/vibe",    icon: "🎖️", label: "My NFTs" },
+            { href: "/dao",     icon: "⚖️", label: "DAO" },
+            { href: "/nft",     icon: "✨", label: "Mint NFT" },
           ].map((item) => (
             <Link
               key={item.href}
