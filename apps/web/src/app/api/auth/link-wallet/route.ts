@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Authentication required" }, { status: 400 });
     }
 
     const { error } = await supabase
@@ -41,14 +41,17 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       if (error.code === "23505") {
-        return NextResponse.json({ error: "Wallet already linked to another account" }, { status: 409 });
+        return NextResponse.json(
+          { error: "Wallet already linked to another account" },
+          { status: 400 }
+        );
       }
-      return NextResponse.json({ error: "Failed to link wallet" }, { status: 500 });
+      return NextResponse.json({ error: "Failed to link wallet" }, { status: 400 });
     }
 
     usedNonces.add(nonce);
     return NextResponse.json({ success: true });
   } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }
