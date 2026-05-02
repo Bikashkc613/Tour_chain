@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { withErrors } from "@/lib/api/handle";
 import { jsonError, jsonOk } from "@/lib/api/response";
+import { NextResponse } from "next/server";
 
 export const GET = withErrors(async (_req: NextRequest) => {
   const supabase = await createClient();
@@ -22,7 +23,6 @@ export const GET = withErrors(async (_req: NextRequest) => {
   }
 
   if (error?.message?.includes("image_url") && error.message.includes("does not exist")) {
-    // Schema variant: routes table without optional presentation columns.
     let retry = await minimal.eq("is_active", true).order("name", { ascending: true });
     if (retry.error?.message?.includes("is_active") && retry.error.message.includes("does not exist")) {
       retry = await minimal.order("name", { ascending: true });

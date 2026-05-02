@@ -259,11 +259,14 @@ export default function DAODashboard() {
   const resolvedCount = disputes.filter(d => d.status === "resolved").length;
 
   return (
-    <main className="min-h-screen" style={{ background: "linear-gradient(135deg, #0a0f1e 0%, #1a1040 50%, #0f1a2e 100%)" }}>
+    <main className="min-h-screen relative" style={{ background: "linear-gradient(135deg, #06040f 0%, #0d0820 50%, #060d1a 100%)" }}>
+      {/* Mountain silhouette */}
+      <div className="fixed bottom-0 left-0 right-0 pointer-events-none z-0 opacity-[0.04]" style={{ height: "280px", background: "white", clipPath: "polygon(0% 100%,0% 70%,5% 65%,10% 55%,15% 60%,20% 40%,25% 45%,30% 25%,35% 30%,40% 15%,45% 20%,50% 5%,55% 18%,60% 12%,65% 28%,70% 22%,75% 38%,80% 32%,85% 48%,90% 42%,95% 58%,100% 52%,100% 100%)" }} />
       {/* Background glows */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 right-1/3 w-96 h-96 rounded-full blur-3xl opacity-15" style={{ background: "radial-gradient(circle, #7c3aed, transparent)", animation: "float 8s ease-in-out infinite" }} />
-        <div className="absolute bottom-20 left-1/4 w-80 h-80 rounded-full blur-3xl opacity-15" style={{ background: "radial-gradient(circle, #2563eb, transparent)", animation: "float 10s ease-in-out infinite reverse" }} />
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-0 right-1/3 w-[500px] h-[500px] rounded-full blur-3xl" style={{ background: "radial-gradient(circle,rgba(124,58,237,0.15),transparent 70%)", animation: "orb-float 18s ease-in-out infinite" }} />
+        <div className="absolute bottom-[10%] left-[10%] w-[450px] h-[450px] rounded-full blur-3xl" style={{ background: "radial-gradient(circle,rgba(37,99,235,0.12),transparent 70%)", animation: "orb-float 22s ease-in-out infinite", animationDelay: "4s" }} />
+        <div className="absolute top-[40%] left-[40%] w-[300px] h-[300px] rounded-full blur-3xl" style={{ background: "radial-gradient(circle,rgba(214,40,40,0.06),transparent 70%)", animation: "orb-float 16s ease-in-out infinite", animationDelay: "8s" }} />
       </div>
 
       <div className="relative z-10 pt-28 pb-16 px-4 max-w-5xl mx-auto">
@@ -392,16 +395,9 @@ export default function DAODashboard() {
         )}
 
         <p className="text-center text-white/25 text-xs mt-12">
-          TrustDAO · Governance powered by community consensus · Tourism Chain Nepal
+          TrustDAO · Governance powered by community consensus · TourChain
         </p>
       </div>
-
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-20px); }
-        }
-      `}</style>
     </main>
   );
 }

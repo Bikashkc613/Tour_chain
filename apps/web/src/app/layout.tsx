@@ -16,7 +16,7 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Tourism Chain Nepal | Solana-Powered Ecosystem",
+  title: "TourChain | Solana-Powered Trek Ecosystem",
   description: "Tokenized tourism rails protocol for the Himalayan experience.",
 };
 

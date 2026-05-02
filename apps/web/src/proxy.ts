@@ -23,11 +23,22 @@ export async function proxy(request: NextRequest) {
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           response = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options),
+          );
         },
       },
-    },
-  );
+    });
+  } catch {
+    // @supabase/ssr adapter incompatibility — fall back to redirect-only guard
+    const pathname = request.nextUrl.pathname;
+    if (isProtected(pathname)) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      return NextResponse.redirect(url);
+    }
+    return response;
+  }
 
   const {
     data: { user },

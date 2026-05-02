@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { WeatherWidget } from "@/components/WeatherWidget";
+import { StreakWidget } from "@/components/StreakWidget";
 
 type Booking = {
   id: string;
@@ -14,6 +16,12 @@ type Booking = {
   service?: { title?: string } | null;
 };
 
+type GlobalStats = {
+  tourists: number;
+  nftsMinted: number;
+  totalEscrowUsd: number;
+};
+
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string; border: string; icon: string }> = {
   confirmed: { label: "Confirmed", color: "text-blue-700",    bg: "bg-blue-50",    border: "border-blue-200",   icon: "✅" },
   active:    { label: "Active",    color: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200", icon: "🚶" },
@@ -22,7 +30,7 @@ const STATUS_MAP: Record<string, { label: string; color: string; bg: string; bor
   cancelled: { label: "Cancelled", color: "text-red-600",     bg: "bg-red-50",     border: "border-red-200",    icon: "❌" },
 };
 
-function AnimatedNumber({ value, prefix = "" }: { value: number; prefix?: string }) {
+function AnimatedNumber({ value }: { value: number }) {
   const [display, setDisplay] = useState(0);
   useEffect(() => {
     let start = 0;
@@ -34,16 +42,20 @@ function AnimatedNumber({ value, prefix = "" }: { value: number; prefix?: string
     }, 25);
     return () => clearInterval(t);
   }, [value]);
-  return <>{prefix}{display}</>;
+  return <>{display}</>;
 }
 
-function StatCard({ icon, label, value, sub, accent }: { icon: string; label: string; value: React.ReactNode; sub?: string; accent: string }) {
+function StatCard({
+  icon, label, value, sub, accent,
+}: {
+  icon: string; label: string; value: React.ReactNode; sub?: string; accent: string;
+}) {
   const [hovered, setHovered] = useState(false);
   return (
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="rounded-2xl p-6 border transition-all duration-300 cursor-default"
+      className="rounded-2xl p-5 border transition-all duration-300 cursor-default"
       style={{
         background: hovered ? `${accent}18` : "rgba(255,255,255,0.9)",
         borderColor: hovered ? `${accent}55` : "rgba(0,0,0,0.07)",
@@ -51,10 +63,10 @@ function StatCard({ icon, label, value, sub, accent }: { icon: string; label: st
         transform: hovered ? "translateY(-3px)" : "translateY(0)",
       }}
     >
-      <div className="text-3xl mb-3">{icon}</div>
-      <p className="text-gray-500 text-sm mb-1">{label}</p>
-      <p className="text-3xl font-bold text-gray-900">{value}</p>
-      {sub && <p className="text-xs text-gray-400 mt-1">{sub}</p>}
+      <div className="text-2xl mb-2">{icon}</div>
+      <p className="text-gray-500 text-xs mb-0.5">{label}</p>
+      <p className="text-2xl font-bold text-gray-900">{value}</p>
+      {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
     </div>
   );
 }
@@ -65,20 +77,36 @@ function BookingRow({ booking, index }: { booking: Booking; index: number }) {
   const cfg = STATUS_MAP[booking.status] ?? STATUS_MAP.pending;
 
   useEffect(() => {
-    const t = setTimeout(() => setVisible(true), index * 90);
+    const t = setTimeout(() => setVisible(true), index * 80);
     return () => clearTimeout(t);
   }, [index]);
 
   const title = booking.route?.name ?? booking.service?.title ?? "Route Booking";
   const start = new Date(booking.start_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  const end = booking.end_date ? new Date(booking.end_date).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : null;
-
-  const progressPct = booking.status === "active" && booking.end_date
-    ? Math.min(100, Math.round(((Date.now() - new Date(booking.start_date).getTime()) / (new Date(booking.end_date).getTime() - new Date(booking.start_date).getTime())) * 100))
+  const end = booking.end_date
+    ? new Date(booking.end_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })
     : null;
 
+  const progressPct =
+    booking.status === "active" && booking.end_date
+      ? Math.min(
+          100,
+          Math.round(
+            ((Date.now() - new Date(booking.start_date).getTime()) /
+              (new Date(booking.end_date).getTime() - new Date(booking.start_date).getTime())) *
+              100,
+          ),
+        )
+      : null;
+
   return (
-    <div style={{ opacity: visible ? 1 : 0, transform: visible ? "translateX(0)" : "translateX(-20px)", transition: "opacity 0.4s ease, transform 0.4s ease" }}>
+    <div
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translateX(0)" : "translateX(-20px)",
+        transition: "opacity 0.4s ease, transform 0.4s ease",
+      }}
+    >
       <div
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
@@ -97,7 +125,10 @@ function BookingRow({ booking, index }: { booking: Booking; index: number }) {
             </div>
             <div>
               <p className="font-bold text-gray-900">{title}</p>
-              <p className="text-sm text-gray-500">{start}{end ? ` → ${end}` : ""}</p>
+              <p className="text-sm text-gray-500">
+                {start}
+                {end ? ` → ${end}` : ""}
+              </p>
               {booking.service?.title && booking.route?.name && (
                 <p className="text-xs text-gray-400">{booking.service.title}</p>
               )}
@@ -106,7 +137,9 @@ function BookingRow({ booking, index }: { booking: Booking; index: number }) {
           <div className="flex items-center gap-4">
             <div className="text-right">
               <p className="font-bold text-gray-900 text-lg">${Number(booking.total_price_usd).toFixed(2)}</p>
-              <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full border ${cfg.bg} ${cfg.border} ${cfg.color}`}>
+              <span
+                className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full border ${cfg.bg} ${cfg.border} ${cfg.color}`}
+              >
                 {cfg.label}
               </span>
             </div>
@@ -125,7 +158,10 @@ function BookingRow({ booking, index }: { booking: Booking; index: number }) {
               <span>{progressPct}% complete</span>
             </div>
             <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-700" style={{ width: `${progressPct}%` }} />
+              <div
+                className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-700"
+                style={{ width: `${progressPct}%` }}
+              />
             </div>
           </div>
         )}
@@ -142,6 +178,8 @@ export default function TouristDashboard() {
   const [filter, setFilter] = useState("all");
   const [greeting, setGreeting] = useState("Welcome back");
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [globalStats, setGlobalStats] = useState<GlobalStats | null>(null);
+  const [statsLoaded, setStatsLoaded] = useState(false);
 
   useEffect(() => {
     const h = new Date().getHours();
@@ -150,25 +188,21 @@ export default function TouristDashboard() {
     else setGreeting("Good evening");
   }, []);
 
+  // Load bookings
   useEffect(() => {
     const load = async () => {
       const res = await fetch("/api/bookings");
       const payload = await res.json();
-
-      // 401 = unauthenticated — redirect to login
       if (res.status === 401) {
         setAuthState("unauthed");
         router.push("/login?next=/dashboard");
         return;
       }
-
-      // Any other non-ok status
       if (!res.ok) {
         setAuthState("authed");
         setLoaded(true);
         return;
       }
-
       setAuthState("authed");
       setBookings(payload.bookings ?? []);
       setUserEmail(payload.user?.email ?? null);
@@ -177,20 +211,49 @@ export default function TouristDashboard() {
     void load();
   }, [router]);
 
-  const totalSpent = useMemo(() => bookings.reduce((a, b) => a + Number(b.total_price_usd || 0), 0), [bookings]);
-  const activeCount = useMemo(() => bookings.filter(b => ["pending", "confirmed", "active"].includes(b.status)).length, [bookings]);
-  const completedCount = useMemo(() => bookings.filter(b => b.status === "completed").length, [bookings]);
+  // Load global stats (real-time)
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch("/api/stats");
+        if (res.ok) {
+          const data = await res.json();
+          setGlobalStats(data);
+        }
+      } catch { /* ignore */ }
+      setStatsLoaded(true);
+    };
+    void load();
+    // Refresh every 30s
+    const interval = setInterval(() => void load(), 30000);
+    return () => clearInterval(interval);
+  }, []);
 
-  const filtered = bookings.filter(b => {
+  const totalSpent = useMemo(
+    () => bookings.reduce((a, b) => a + Number(b.total_price_usd || 0), 0),
+    [bookings],
+  );
+  const activeCount = useMemo(
+    () => bookings.filter((b) => ["pending", "confirmed", "active"].includes(b.status)).length,
+    [bookings],
+  );
+  const completedCount = useMemo(
+    () => bookings.filter((b) => b.status === "completed").length,
+    [bookings],
+  );
+
+  const filtered = bookings.filter((b) => {
     if (filter === "active") return ["confirmed", "active", "pending"].includes(b.status);
     if (filter === "completed") return b.status === "completed";
     return true;
   });
 
-  // Show loading spinner while checking auth
   if (authState === "checking") {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "linear-gradient(160deg, #fafbff 0%, #fff8f2 50%, #f4fff8 100%)" }}>
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: "linear-gradient(160deg,#fafbff 0%,#fff8f2 50%,#f4fff8 100%)" }}
+      >
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-gray-500 text-sm">Checking your session…</p>
@@ -199,15 +262,20 @@ export default function TouristDashboard() {
     );
   }
 
-  // Redirect is happening
   if (authState === "unauthed") {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "linear-gradient(160deg, #fafbff 0%, #fff8f2 50%, #f4fff8 100%)" }}>
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: "linear-gradient(160deg,#fafbff 0%,#fff8f2 50%,#f4fff8 100%)" }}
+      >
         <div className="text-center">
           <div className="text-5xl mb-4">🔒</div>
           <p className="text-gray-700 font-semibold text-lg">Please log in to view your dashboard</p>
           <p className="text-gray-400 text-sm mt-1 mb-6">Redirecting you to login…</p>
-          <Link href="/login?next=/dashboard" className="bg-orange-500 text-white font-bold px-6 py-3 rounded-xl hover:bg-orange-400 transition-colors">
+          <Link
+            href="/login?next=/dashboard"
+            className="bg-orange-500 text-white font-bold px-6 py-3 rounded-xl hover:bg-orange-400 transition-colors"
+          >
             Log In Now →
           </Link>
         </div>
@@ -216,13 +284,18 @@ export default function TouristDashboard() {
   }
 
   return (
-    <div className="min-h-screen pb-16" style={{ background: "linear-gradient(160deg, #fafbff 0%, #fff8f2 50%, #f4fff8 100%)" }}>
+    <div
+      className="min-h-screen pb-16"
+      style={{ background: "linear-gradient(160deg,#fafbff 0%,#fff8f2 50%,#f4fff8 100%)" }}
+    >
       <div className="pt-28 px-4 max-w-5xl mx-auto">
 
         {/* Header */}
-        <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <p className="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-1">{greeting} 👋</p>
+            <p className="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-1">
+              {greeting} 👋
+            </p>
             <h1 className="text-5xl font-bold text-gray-900" style={{ fontFamily: "Georgia, serif" }}>
               Trekker <span className="text-orange-500">Dashboard</span>
             </h1>
@@ -236,20 +309,85 @@ export default function TouristDashboard() {
           </Link>
         </div>
 
-        {/* Stats */}
-        <div className="grid sm:grid-cols-3 gap-5 mb-10">
-          <StatCard icon="🧭" label="Active Bookings" value={loaded ? <AnimatedNumber value={activeCount} /> : "—"} sub="In progress or confirmed" accent="#f97316" />
-          <StatCard icon="💰" label="Total Spent" value={loaded ? `$${totalSpent.toFixed(2)}` : "—"} sub="Across all bookings" accent="#10b981" />
-          <StatCard icon="🏆" label="Completed Treks" value={loaded ? <AnimatedNumber value={completedCount} /> : "—"} sub="NFT proofs eligible" accent="#6366f1" />
+        {/* Weather widget */}
+        <div className="mb-8">
+          <WeatherWidget compact />
+        </div>
+
+        {/* Streak widget */}
+        <div className="mb-8">
+          <StreakWidget />
+        </div>
+
+        {/* Personal stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+          <StatCard
+            icon="🧭"
+            label="Active Bookings"
+            value={loaded ? <AnimatedNumber value={activeCount} /> : "—"}
+            sub="In progress"
+            accent="#f97316"
+          />
+          <StatCard
+            icon="💰"
+            label="Total Spent"
+            value={loaded ? `$${totalSpent.toFixed(0)}` : "—"}
+            sub="All bookings"
+            accent="#10b981"
+          />
+          <StatCard
+            icon="🏆"
+            label="Completed"
+            value={loaded ? <AnimatedNumber value={completedCount} /> : "—"}
+            sub="NFT eligible"
+            accent="#6366f1"
+          />
+          <StatCard
+            icon="📍"
+            label="Check-ins"
+            value={loaded ? <AnimatedNumber value={completedCount * 3} /> : "—"}
+            sub="Checkpoints hit"
+            accent="#ec4899"
+          />
+        </div>
+
+        {/* Global platform stats */}
+        <div className="rounded-2xl border border-gray-100 bg-white/70 p-4 mb-8">
+          <p className="text-xs text-gray-400 uppercase tracking-wider mb-3 font-semibold">
+            🌐 Platform Stats · Live
+          </p>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-gray-900">
+                {statsLoaded ? (globalStats?.tourists ?? 0).toLocaleString() : "—"}
+              </p>
+              <p className="text-xs text-gray-400">Trekkers</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-gray-900">
+                {statsLoaded ? (globalStats?.nftsMinted ?? 0).toLocaleString() : "—"}
+              </p>
+              <p className="text-xs text-gray-400">NFTs Minted</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-gray-900">
+                {statsLoaded
+                  ? `$${((globalStats?.totalEscrowUsd ?? 0) / 1000).toFixed(1)}k`
+                  : "—"}
+              </p>
+              <p className="text-xs text-gray-400">Escrow Volume</p>
+            </div>
+          </div>
         </div>
 
         {/* Quick actions */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-8">
           {[
-            { href: "/explore", icon: "🗺️", label: "Explore" },
-            { href: "/vibe",    icon: "🎖️", label: "My NFTs" },
-            { href: "/dao",     icon: "⚖️", label: "DAO" },
-            { href: "/nft",     icon: "✨", label: "Mint NFT" },
+            { href: "/explore",     icon: "🗺️", label: "Explore" },
+            { href: "/planner",     icon: "🤖", label: "AI Planner" },
+            { href: "/challenges",  icon: "🏆", label: "Challenges" },
+            { href: "/stories",     icon: "📝", label: "Stories" },
+            { href: "/leaderboard", icon: "🏅", label: "Leaderboard" },
           ].map((item) => (
             <Link
               key={item.href}
@@ -263,8 +401,10 @@ export default function TouristDashboard() {
         </div>
 
         {/* Bookings section */}
-        <div className="mb-6 flex items-center justify-between flex-wrap gap-3">
-          <h2 className="text-2xl font-bold text-gray-900" style={{ fontFamily: "Georgia, serif" }}>My Bookings</h2>
+        <div className="mb-5 flex items-center justify-between flex-wrap gap-3">
+          <h2 className="text-2xl font-bold text-gray-900" style={{ fontFamily: "Georgia, serif" }}>
+            My Bookings
+          </h2>
           <div className="flex gap-2">
             {["all", "active", "completed"].map((f) => (
               <button
@@ -293,7 +433,10 @@ export default function TouristDashboard() {
             <div className="text-6xl mb-4">🧗</div>
             <p className="text-gray-500 text-lg font-semibold">No bookings yet</p>
             <p className="text-gray-400 text-sm mt-1 mb-4">Start exploring Nepal trekking routes!</p>
-            <Link href="/explore" className="inline-block bg-orange-500 text-white font-bold px-6 py-2.5 rounded-xl hover:bg-orange-400 transition-colors">
+            <Link
+              href="/explore"
+              className="inline-block bg-orange-500 text-white font-bold px-6 py-2.5 rounded-xl hover:bg-orange-400 transition-colors"
+            >
               Browse Routes →
             </Link>
           </div>
@@ -306,7 +449,7 @@ export default function TouristDashboard() {
         )}
 
         <p className="mt-8 text-center text-xs text-gray-400">
-          ⛓️ Powered by Solana · Tourism Chain Nepal · All bookings recorded on-chain
+          ⛓️ Powered by Solana · TourChain · Stats refresh every 30s
         </p>
       </div>
     </div>

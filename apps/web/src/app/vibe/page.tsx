@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { ShareCard } from "@/components/ShareCard";
 
 type Proof = {
   id: string;
@@ -23,6 +24,7 @@ const COLORS = [
 function ProofCard({ proof, index }: { proof: Proof; index: number }) {
   const [flipped, setFlipped] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -36,6 +38,7 @@ function ProofCard({ proof, index }: { proof: Proof; index: number }) {
   const date = new Date(proof.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
   return (
+    <>
     <div
       ref={ref}
       className="cursor-pointer"
@@ -114,10 +117,27 @@ function ProofCard({ proof, index }: { proof: Proof; index: number }) {
             >
               ↩ Flip Back
             </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); setSharing(s => !s); }}
+              className="bg-indigo-500/80 hover:bg-indigo-500 text-white text-xs font-bold py-2 px-3 rounded-lg transition-colors"
+            >
+              📤 Share
+            </button>
           </div>
         </div>
       </div>
     </div>
+    {sharing && (
+      <div className="mt-3" onClick={(e) => e.stopPropagation()}>
+        <ShareCard
+          mode="achievement"
+          routeName={proof.route?.name ?? "Nepal Trek"}
+          xp={500}
+          mintAddress={proof.nft_mint_address ?? undefined}
+        />
+      </div>
+    )}
+    </>
   );
 }
 
