@@ -32,7 +32,7 @@ jobs:
 
       - name: Build programs
         working-directory: programs
-        run: anchor build
+        run: anchor build --ignore-keys
 
       - name: Run Anchor litesvm tests
         working-directory: programs
