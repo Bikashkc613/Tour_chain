@@ -8,14 +8,71 @@ import {
   Phone, CheckCircle, Star, Award, TrendingUp
 } from "lucide-react";
 
+type Route = {
+  id: string;
+  name: string;
+  description: string;
+  difficulty: string;
+  duration_days: number;
+  max_altitude_m: number;
+  price_usd: number;
+};
+
+type Guide = {
+  id: string;
+  name: string;
+  rating: number;
+  total_reviews: number;
+  specialties: string[];
+  price_per_day: number;
+  verified: boolean;
+  experience_years: number;
+};
+
+type Place = {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  rating: number;
+  verified: boolean;
+};
+
+type DayItinerary = {
+  day: number;
+  title: string;
+  activities: string[];
+  places: string[];
+  meals: string;
+  accommodation: string;
+  notes: string;
+};
+
+type CostBreakdown = {
+  guide_cost: number;
+  accommodation: number;
+  meals: number;
+  permits: number;
+  transport: number;
+  total: number;
+};
+
+type BookingInfo = {
+  best_season: string;
+  advance_booking_days: number;
+  required_permits: string[];
+  fitness_level: string;
+  group_size_recommendation: string;
+};
+
 type ComprehensivePlan = {
   summary: string;
-  recommended_route: any;
-  recommended_guides: any[];
-  recommended_places: any[];
-  detailed_itinerary: any[];
-  total_cost_breakdown: any;
-  booking_info: any;
+  recommended_route: Route | null;
+  recommended_guides: Guide[];
+  recommended_places: Place[];
+  detailed_itinerary: DayItinerary[];
+  total_cost_breakdown: CostBreakdown;
+  booking_info: BookingInfo;
   safety_tips: string[];
   packing_list: string[];
   emergency_contacts: string[];

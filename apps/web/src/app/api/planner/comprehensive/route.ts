@@ -123,7 +123,7 @@ export const POST = handle(ComprehensivePlannerInput, async (body) => {
     // Prepare context for AI
     const contextData = {
       available_guides: guides.map(g => ({
-        name: (g.users as any)?.name || "Guide",
+        name: (g.users as { name?: string } | null)?.name || "Guide",
         specialties: g.specialties,
         rating: g.rating,
         reviews: g.total_reviews,
@@ -334,7 +334,12 @@ IMPORTANT:
   }
 });
 
-function createDemoComprehensivePlan(query: string, guides: any[], places: any[], routes: any[]): ComprehensivePlan {
+function createDemoComprehensivePlan(
+  query: string, 
+  guides: Guide[], 
+  places: Place[], 
+  routes: Route[]
+): ComprehensivePlan {
   return {
     summary: `Based on your query "${query}", we've created a comprehensive ${routes[0]?.duration_days || 10}-day trip plan with verified guides, curated places, and detailed itinerary. (Demo Mode - Connect real API for AI-powered planning)`,
     recommended_route: routes[0] ? {
