@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::instruction::{AccountMeta, Instruction};
 use anchor_lang::solana_program::program::invoke;
 
-declare_id!("EvRzd8MXqxojEmn4jViXv8NyxVXoU3X1gEuSv1tw9qML");
+declare_id!("72XSkdM1Nra4p5a73xxyoX45ibFeWoTxpnvmx4ArPRaN");
 
 // sha256("global:mintV1")[0..8] — discriminator for deployed mpl-bubblegum v1
 const BUBBLEGUM_MINT_V1_DISCRIMINATOR: [u8; 8] = [254, 205, 116, 98, 30, 28, 105, 59];
