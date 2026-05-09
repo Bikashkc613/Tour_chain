@@ -38,9 +38,20 @@ export const SolanaProvider = ({ children }: { children: React.ReactNode }) => {
     [],
   );
 
+  // Error handler for wallet connection errors
+  const onError = (error: Error) => {
+    // Suppress auto-connect errors - these are expected when no wallet is connected
+    if (error.name === 'WalletConnectionError' || error.message.includes('User rejected')) {
+      console.log('[Wallet] Auto-connect failed (this is normal if no wallet was previously connected)');
+      return;
+    }
+    // Log other errors
+    console.error('[Wallet Error]:', error);
+  };
+
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect>
+      <WalletProvider wallets={wallets} autoConnect onError={onError}>
         <WalletModalProvider>{children}</WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>

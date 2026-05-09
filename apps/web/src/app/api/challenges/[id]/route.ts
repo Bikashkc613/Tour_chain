@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { jsonOk, jsonError } from "@/lib/api/response";
-import { DEMO_CHALLENGES } from "@/app/api/challenges/route";
+import { DEMO_CHALLENGES } from "@/lib/data/demo-challenges";
 
 type Ctx = { params: Promise<{ id: string }> };
 

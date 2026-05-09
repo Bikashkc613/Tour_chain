@@ -100,6 +100,7 @@ export default function BookingPage() {
   const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
   const [specialRequests, setSpecialRequests] = useState("");
   const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [guideWallet, setGuideWallet] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -144,6 +145,27 @@ export default function BookingPage() {
   );
 
   const isDemo = (svc: ServiceItem) => !UUID_RE.test(svc.id) || !UUID_RE.test(svc.guide_id);
+
+  // Fetch guide's wallet address when service is selected
+  useEffect(() => {
+    const fetchGuideWallet = async () => {
+      if (!selectedService || isDemo(selectedService)) {
+        setGuideWallet(null);
+        return;
+      }
+      
+      try {
+        const res = await fetch(`/api/guides/${selectedService.guide_id}`);
+        if (res.ok) {
+          const data = await res.json();
+          setGuideWallet(data.guide?.wallet_address ?? null);
+        }
+      } catch {
+        setGuideWallet(null);
+      }
+    };
+    void fetchGuideWallet();
+  }, [selectedService]);
 
   const addOnTotal = ADD_ONS.filter((a) => selectedAddOns.includes(a.id)).reduce((s, a) => s + a.price, 0);
   const basePrice = selectedService?.price_usd ?? 0;
@@ -217,7 +239,22 @@ export default function BookingPage() {
                 <div className="flex justify-between"><span className="text-gray-400">Start Date</span><span className="font-semibold" style={{ color:"#1a2b4a" }}>{startDate}</span></div>
                 <div className="flex justify-between"><span className="text-gray-400">Total</span><span className="font-bold text-lg" style={{ color:"#2d6a4f" }}>${total}</span></div>
               </div>
-              <EscrowPanel bookingId={confirmedBookingId} priceUsd={total} guideWallet={UUID_RE.test(selectedService.guide_id) ? selectedService.guide_id : undefined} onSuccess={(sig) => console.log("Escrow locked:", sig)} />
+              
+              {/* Escrow info note */}
+              <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-left">
+                <div className="flex items-start gap-3">
+                  <Shield className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                  <div className="text-sm">
+                    <p className="font-semibold text-blue-900 mb-1">Optional: Lock Funds in Escrow</p>
+                    <p className="text-blue-700 text-xs leading-relaxed">
+                      Your booking is confirmed! For added security, you can optionally lock your payment in a Solana escrow contract below. 
+                      {!guideWallet && " (Note: Your guide needs to connect their wallet first to enable escrow.)"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <EscrowPanel bookingId={confirmedBookingId} priceUsd={total} guideWallet={guideWallet ?? undefined} onSuccess={(sig) => console.log("Escrow locked:", sig)} />
               <Link href="/explore" className="inline-flex items-center gap-2 text-sm font-semibold mt-2" style={{ color:"#2d6a4f" }}>← Back to Explore</Link>
             </div>
           </motion.div>

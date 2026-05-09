@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Sparkles, MapPin, Clock, TrendingUp, ChevronRight, Loader2, Mountain, Send } from "lucide-react";
+import { Sparkles, MapPin, Clock, TrendingUp, ChevronRight, Loader2, Mountain, Send, Star } from "lucide-react";
 
 type Recommendation = {
   rank: number;
@@ -34,10 +34,12 @@ const DIFFICULTY_COLOR: Record<string, string> = {
 };
 
 const EXAMPLE_PROMPTS = [
-  "I'm a beginner with 7 days, budget $500, want mountain views",
+  "What are the best places to visit in Butwal?",
+  "I have 7 days for trekking, beginner level, budget $500",
+  "Show me cultural and religious sites in Kathmandu",
+  "Best viewpoints and nature spots near Pokhara",
+  "Family-friendly activities in Chitwan",
   "Experienced trekker, 14 days, want to reach 5000m+",
-  "Family trip with kids, easy trails, 5 days max",
-  "Solo adventure, moderate difficulty, off the beaten path",
 ];
 
 export default function PlannerPage() {
@@ -64,7 +66,9 @@ export default function PlannerPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Failed to get recommendations");
+        // Handle error response with nested error object
+        const errorMessage = data.error?.message || data.error || "Failed to get recommendations";
+        setError(errorMessage);
         return;
       }
       setResult(data);
@@ -76,44 +80,45 @@ export default function PlannerPage() {
   };
 
   return (
-    <main
-      className="min-h-screen pb-20"
-      style={{ background: "linear-gradient(160deg, #0f172a 0%, #1a2744 40%, #0f2027 100%)" }}
-    >
-      {/* Animated background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div
-          className="absolute top-32 left-1/3 w-96 h-96 rounded-full blur-3xl opacity-10"
-          style={{ background: "radial-gradient(circle, #6366f1, transparent)", animation: "pulse 5s ease-in-out infinite" }}
-        />
-        <div
-          className="absolute bottom-40 right-1/4 w-80 h-80 rounded-full blur-3xl opacity-10"
-          style={{ background: "radial-gradient(circle, #f97316, transparent)", animation: "pulse 7s ease-in-out infinite 2s" }}
-        />
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 pb-20">
+      {/* Decorative background elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-40">
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-indigo-400 to-purple-400 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-1/2 -left-40 w-80 h-80 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
+        <div className="absolute bottom-20 right-1/3 w-72 h-72 bg-gradient-to-br from-violet-400 to-pink-400 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "4s" }} />
       </div>
 
-      <div className="relative z-10 pt-28 px-4 max-w-4xl mx-auto">
+      <div className="relative z-10 pt-32 px-4 max-w-5xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 bg-indigo-500/20 border border-indigo-400/30 rounded-full px-4 py-2 text-sm text-indigo-300 mb-6">
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-full px-5 py-2.5 text-sm font-semibold mb-6 shadow-lg shadow-indigo-500/30 animate-bounce-slow">
             <Sparkles className="w-4 h-4" />
-            AI-Powered Trek Recommendations
+            AI-Powered Travel & Trek Recommendations
           </div>
           <h1
-            className="text-5xl md:text-6xl font-bold text-white mb-4"
-            style={{ fontFamily: "Georgia, serif", textShadow: "0 0 40px rgba(99,102,241,0.4)" }}
+            className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-6 leading-tight"
+            style={{ fontFamily: "Georgia, serif" }}
           >
             🤖 AI Trip Planner
           </h1>
-          <p className="text-white/60 text-lg max-w-xl mx-auto">
-            Describe your dream trek in plain English. Our smart matching engine finds your perfect Himalayan route.
+          <p className="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed mb-6">
+            Discover Nepal with AI. Ask about treks, cities, attractions, or experiences — 
+            get personalized recommendations based on current trends, social media insights, and local knowledge.
           </p>
+          <Link
+            href="/planner/comprehensive"
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold px-6 py-3 rounded-xl hover:scale-105 transition-all shadow-lg"
+          >
+            <Sparkles className="w-5 h-5" />
+            Try Comprehensive Trip Planner (with Guides & Full Itinerary)
+          </Link>
         </div>
 
-        {/* Input */}
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-3xl p-6 mb-6">
-          <label className="block text-white/70 text-sm font-semibold mb-3 uppercase tracking-wider">
-            Tell us about your ideal trek
+        {/* Input Section */}
+        <div className="bg-white rounded-3xl shadow-2xl shadow-indigo-500/10 p-8 mb-8 border border-indigo-100">
+          <label className="block text-slate-700 text-sm font-bold mb-4 uppercase tracking-wider flex items-center gap-2">
+            <Star className="w-4 h-4 text-indigo-500" />
+            Ask me anything about Nepal
           </label>
           <div className="relative">
             <textarea
@@ -125,28 +130,28 @@ export default function PlannerPage() {
                   void handleSubmit();
                 }
               }}
-              placeholder="e.g. I have 10 days, moderate fitness, budget around $800, want stunning mountain views and cultural experiences..."
-              rows={3}
-              className="w-full bg-white/10 border border-white/20 rounded-2xl px-5 py-4 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-indigo-400/50 resize-none text-base"
+              placeholder="e.g. What are the best places to visit in Butwal? / I have 10 days for trekking, moderate fitness / Show me cultural sites in Kathmandu..."
+              rows={4}
+              className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-6 py-4 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none text-base transition-all"
             />
             <button
               onClick={() => void handleSubmit()}
               disabled={loading || !input.trim()}
-              className="absolute bottom-3 right-3 bg-indigo-500 hover:bg-indigo-400 disabled:opacity-40 text-white p-2.5 rounded-xl transition-all hover:scale-105"
+              className="absolute bottom-4 right-4 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white p-3 rounded-xl transition-all hover:scale-105 shadow-lg shadow-indigo-500/30"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
             </button>
           </div>
 
           {/* Example prompts */}
-          <div className="mt-4">
-            <p className="text-white/40 text-xs mb-2 uppercase tracking-wider">Try an example:</p>
+          <div className="mt-6">
+            <p className="text-slate-500 text-xs mb-3 uppercase tracking-wider font-semibold">✨ Try an example:</p>
             <div className="flex flex-wrap gap-2">
               {EXAMPLE_PROMPTS.map((p) => (
                 <button
                   key={p}
                   onClick={() => void handleSubmit(p)}
-                  className="text-xs bg-white/5 hover:bg-white/10 border border-white/10 hover:border-indigo-400/40 text-white/60 hover:text-white px-3 py-1.5 rounded-full transition-all"
+                  className="text-xs bg-gradient-to-r from-indigo-50 to-purple-50 hover:from-indigo-100 hover:to-purple-100 border border-indigo-200 hover:border-indigo-300 text-slate-700 px-4 py-2 rounded-full transition-all hover:shadow-md"
                 >
                   {p}
                 </button>
@@ -157,128 +162,144 @@ export default function PlannerPage() {
 
         {/* Error */}
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 mb-6 text-red-300 text-sm">
-            ⚠️ {error}
+          <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-5 mb-8 text-red-700 text-sm flex items-start gap-3 shadow-lg">
+            <span className="text-xl">⚠️</span>
+            <span>{error}</span>
           </div>
         )}
 
         {/* Loading */}
         {loading && (
-          <div className="text-center py-16">
-            <div className="inline-flex flex-col items-center gap-4">
+          <div className="text-center py-20">
+            <div className="inline-flex flex-col items-center gap-6">
               <div className="relative">
-                <Mountain className="w-16 h-16 text-indigo-400 opacity-30" />
-                <Loader2 className="w-8 h-8 text-indigo-400 animate-spin absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                <div className="w-24 h-24 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 opacity-20 animate-ping absolute" />
+                <div className="w-24 h-24 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center relative">
+                  <Mountain className="w-12 h-12 text-white animate-pulse" />
+                </div>
               </div>
-              <p className="text-white/60 text-sm">Analyzing your preferences and matching routes…</p>
+              <div className="text-center">
+                <p className="text-slate-700 font-semibold text-lg mb-2">Analyzing your query...</p>
+                <p className="text-slate-500 text-sm">Finding the best matches for you</p>
+              </div>
             </div>
           </div>
         )}
 
         {/* Results */}
         {result && !loading && (
-          <div className="space-y-6">
+          <div className="space-y-8">
             {/* AI Summary */}
-            <div className="bg-indigo-500/10 border border-indigo-400/20 rounded-2xl p-5">
-              <div className="flex items-start gap-3">
-                <Sparkles className="w-5 h-5 text-indigo-400 mt-0.5 shrink-0" />
-                <p className="text-white/80 text-sm leading-relaxed">{result.summary}</p>
+            <div className="bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl p-6 shadow-xl shadow-indigo-500/20">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                <p className="text-white text-base leading-relaxed font-medium">{result.summary}</p>
               </div>
             </div>
 
             {/* Recommendations */}
             <div>
-              <h2 className="text-white font-bold text-xl mb-4" style={{ fontFamily: "Georgia, serif" }}>
+              <h2 className="text-slate-800 font-bold text-2xl mb-6 flex items-center gap-3" style={{ fontFamily: "Georgia, serif" }}>
+                <span className="w-1 h-8 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full" />
                 Top {result.recommendations.length} Recommendations
               </h2>
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {result.recommendations.map((rec, i) => (
                   <div
                     key={rec.route_id}
                     onClick={() => setSelected(selected === i ? null : i)}
-                    className="cursor-pointer rounded-2xl border transition-all duration-300 overflow-hidden"
+                    className="cursor-pointer rounded-2xl border-2 transition-all duration-300 overflow-hidden bg-white hover:shadow-2xl"
                     style={{
-                      background: selected === i ? "rgba(99,102,241,0.15)" : "rgba(255,255,255,0.05)",
-                      borderColor: selected === i ? "rgba(99,102,241,0.5)" : "rgba(255,255,255,0.1)",
-                      boxShadow: selected === i ? "0 0 30px rgba(99,102,241,0.15)" : "none",
+                      borderColor: selected === i ? "#6366f1" : "#e2e8f0",
+                      boxShadow: selected === i ? "0 20px 60px rgba(99,102,241,0.15)" : "0 4px 20px rgba(0,0,0,0.05)",
                     }}
                   >
                     {/* Card header */}
-                    <div className="p-5">
+                    <div className="p-6">
                       <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-start gap-4">
+                        <div className="flex items-start gap-4 flex-1">
                           {/* Rank badge */}
                           <div
-                            className="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold shrink-0"
+                            className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-bold shrink-0 shadow-lg"
                             style={{
-                              background: i === 0 ? "linear-gradient(135deg,#f59e0b,#d97706)" : i === 1 ? "linear-gradient(135deg,#94a3b8,#64748b)" : "linear-gradient(135deg,#b45309,#92400e)",
+                              background: i === 0 
+                                ? "linear-gradient(135deg,#fbbf24,#f59e0b)" 
+                                : i === 1 
+                                ? "linear-gradient(135deg,#cbd5e1,#94a3b8)" 
+                                : "linear-gradient(135deg,#fb923c,#f97316)",
                             }}
                           >
                             {i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉"}
                           </div>
-                          <div>
-                            <h3 className="text-white font-bold text-lg leading-tight">{rec.name}</h3>
-                            <div className="flex flex-wrap items-center gap-2 mt-1">
-                              <span className="text-white/50 text-xs flex items-center gap-1">
-                                <MapPin className="w-3 h-3" /> {rec.region}
+                          <div className="flex-1">
+                            <h3 className="text-slate-800 font-bold text-xl leading-tight mb-2">{rec.name}</h3>
+                            <div className="flex flex-wrap items-center gap-3 mb-3">
+                              <span className="text-slate-600 text-sm flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-full">
+                                <MapPin className="w-3.5 h-3.5" /> {rec.region}
                               </span>
-                              <span className="text-white/50 text-xs flex items-center gap-1">
-                                <Clock className="w-3 h-3" /> {rec.duration_days} days
+                              <span className="text-slate-600 text-sm flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-full">
+                                <Clock className="w-3.5 h-3.5" /> {rec.duration_days} {rec.duration_days === 1 ? "day" : "days"}
                               </span>
-                              <span className="text-white/50 text-xs flex items-center gap-1">
-                                <Mountain className="w-3 h-3" /> {(rec.altitude_m / 1000).toFixed(1)}k m
+                              <span className="text-slate-600 text-sm flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-full">
+                                <Mountain className="w-3.5 h-3.5" /> {(rec.altitude_m / 1000).toFixed(1)}k m
                               </span>
                               <span
-                                className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${DIFFICULTY_COLOR[rec.difficulty.toLowerCase()] ?? DIFFICULTY_COLOR.moderate}`}
+                                className={`text-xs font-bold px-3 py-1 rounded-full border-2 ${DIFFICULTY_COLOR[rec.difficulty.toLowerCase()] ?? DIFFICULTY_COLOR.moderate}`}
                               >
                                 {rec.difficulty}
                               </span>
                             </div>
+                            <p className="text-slate-600 text-sm italic leading-relaxed">&ldquo;{rec.why}&rdquo;</p>
                           </div>
                         </div>
                         <div className="text-right shrink-0">
-                          <div className="text-white font-bold text-lg">${rec.price_usd}</div>
-                          <div className="flex items-center gap-1 justify-end mt-1">
-                            <TrendingUp className="w-3 h-3 text-emerald-400" />
-                            <span className="text-emerald-400 text-xs font-bold">{rec.match_score}% match</span>
+                          <div className="text-slate-800 font-bold text-2xl mb-1">${rec.price_usd}</div>
+                          <div className="flex items-center gap-1.5 justify-end bg-gradient-to-r from-emerald-50 to-green-50 px-3 py-1.5 rounded-full border border-emerald-200">
+                            <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
+                            <span className="text-emerald-700 text-sm font-bold">{rec.match_score}%</span>
                           </div>
                         </div>
                       </div>
 
                       {/* Match bar */}
-                      <div className="mt-3 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                      <div className="mt-4 h-2 bg-slate-100 rounded-full overflow-hidden">
                         <div
-                          className="h-full rounded-full transition-all duration-700"
-                          style={{
-                            width: `${rec.match_score}%`,
-                            background: "linear-gradient(90deg, #6366f1, #8b5cf6)",
-                          }}
+                          className="h-full rounded-full transition-all duration-1000 bg-gradient-to-r from-indigo-500 to-purple-500"
+                          style={{ width: `${rec.match_score}%` }}
                         />
                       </div>
-
-                      <p className="text-white/50 text-sm mt-3 italic">&ldquo;{rec.why}&rdquo;</p>
                     </div>
 
                     {/* Expanded details */}
                     {selected === i && (
-                      <div className="border-t border-white/10 p-5 space-y-4">
-                        <div className="grid md:grid-cols-2 gap-4">
-                          <div>
-                            <p className="text-emerald-400 text-xs font-bold uppercase tracking-wider mb-2">✅ Pros</p>
-                            <ul className="space-y-1">
+                      <div className="border-t-2 border-slate-100 bg-gradient-to-br from-slate-50 to-indigo-50 p-6 space-y-5">
+                        <div className="grid md:grid-cols-2 gap-6">
+                          <div className="bg-white rounded-xl p-5 border border-emerald-200 shadow-sm">
+                            <p className="text-emerald-700 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
+                              <span className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">✓</span>
+                              Pros
+                            </p>
+                            <ul className="space-y-2">
                               {rec.pros.map((p) => (
-                                <li key={p} className="text-white/70 text-sm flex items-start gap-2">
-                                  <span className="text-emerald-400 mt-0.5">+</span> {p}
+                                <li key={p} className="text-slate-700 text-sm flex items-start gap-2">
+                                  <span className="text-emerald-500 font-bold mt-0.5">+</span> 
+                                  <span>{p}</span>
                                 </li>
                               ))}
                             </ul>
                           </div>
-                          <div>
-                            <p className="text-red-400 text-xs font-bold uppercase tracking-wider mb-2">⚠️ Cons</p>
-                            <ul className="space-y-1">
+                          <div className="bg-white rounded-xl p-5 border border-orange-200 shadow-sm">
+                            <p className="text-orange-700 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
+                              <span className="w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">!</span>
+                              Considerations
+                            </p>
+                            <ul className="space-y-2">
                               {rec.cons.map((c) => (
-                                <li key={c} className="text-white/70 text-sm flex items-start gap-2">
-                                  <span className="text-red-400 mt-0.5">−</span> {c}
+                                <li key={c} className="text-slate-700 text-sm flex items-start gap-2">
+                                  <span className="text-orange-500 font-bold mt-0.5">−</span> 
+                                  <span>{c}</span>
                                 </li>
                               ))}
                             </ul>
@@ -286,10 +307,10 @@ export default function PlannerPage() {
                         </div>
                         <Link
                           href={`/book/${rec.route_id}`}
-                          className="flex items-center justify-center gap-2 w-full bg-indigo-500 hover:bg-indigo-400 text-white font-bold py-3 rounded-xl transition-all hover:scale-[1.02] shadow-lg shadow-indigo-500/25"
+                          className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white font-bold py-4 rounded-xl transition-all hover:scale-[1.02] shadow-lg shadow-indigo-500/30"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          Book This Trek <ChevronRight className="w-4 h-4" />
+                          View Details <ChevronRight className="w-5 h-5" />
                         </Link>
                       </div>
                     )}
@@ -300,12 +321,18 @@ export default function PlannerPage() {
 
             {/* Tips */}
             {result.tips.length > 0 && (
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
-                <p className="text-white/70 text-xs font-bold uppercase tracking-wider mb-3">💡 Planning Tips</p>
-                <ul className="space-y-2">
-                  {result.tips.map((tip) => (
-                    <li key={tip} className="text-white/60 text-sm flex items-start gap-2">
-                      <span className="text-indigo-400 mt-0.5">→</span> {tip}
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200 rounded-2xl p-6 shadow-lg">
+                <p className="text-amber-800 text-sm font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <span className="text-xl">💡</span>
+                  Planning Tips
+                </p>
+                <ul className="space-y-3">
+                  {result.tips.map((tip, idx) => (
+                    <li key={tip} className="text-slate-700 text-sm flex items-start gap-3 leading-relaxed">
+                      <span className="w-6 h-6 rounded-full bg-gradient-to-r from-amber-400 to-orange-400 text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+                        {idx + 1}
+                      </span>
+                      <span>{tip}</span>
                     </li>
                   ))}
                 </ul>
@@ -316,9 +343,12 @@ export default function PlannerPage() {
       </div>
 
       <style jsx>{`
-        @keyframes pulse {
-          0%, 100% { transform: scale(1); opacity: 0.1; }
-          50% { transform: scale(1.2); opacity: 0.2; }
+        @keyframes bounce-slow {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-5px); }
+        }
+        .animate-bounce-slow {
+          animation: bounce-slow 3s ease-in-out infinite;
         }
       `}</style>
     </main>

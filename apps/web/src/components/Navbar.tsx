@@ -24,7 +24,7 @@ const GREEN = "#2d6a4f";
 
 const PRIMARY_NAV = [
   { name: "Explore",     href: "/explore",     icon: Map,             badge: null },
-  { name: "AI Planner",  href: "/planner",     icon: Sparkles,        badge: "New" },
+  { name: "AI Planner",  href: "/planner",     icon: Sparkles,        badge: null },
   { name: "Challenges",  href: "/challenges",  icon: Swords,          badge: null },
   { name: "Stories",     href: "/stories",     icon: BookOpen,        badge: null },
   { name: "Dashboard",   href: "/dashboard",   icon: LayoutDashboard, badge: null },

@@ -44,7 +44,7 @@ export function EscrowPanel({ bookingId, priceUsd, guideWallet, onSuccess }: Esc
       return;
     }
     if (!guideWallet) {
-      setErrorMsg("Guide wallet address not available.");
+      setErrorMsg("Your booking is confirmed! The guide needs to connect their wallet before you can use escrow protection. You can proceed with your trek as planned.");
       setStatus("error");
       return;
     }
@@ -88,9 +88,9 @@ export function EscrowPanel({ bookingId, priceUsd, guideWallet, onSuccess }: Esc
             <Wallet className="w-6 h-6 text-amber-600" />
           </div>
           <div>
-            <p className="font-bold text-amber-900 text-base">Connect wallet to secure your booking</p>
+            <p className="font-bold text-amber-900 text-base">Optional: Connect wallet for escrow protection</p>
             <p className="text-amber-700 text-sm mt-1 leading-relaxed">
-              Link your Solana wallet to lock funds in a trustless on-chain escrow — your money is protected until the trek is verified complete.
+              Your booking is confirmed! To add blockchain escrow protection, connect your Solana wallet below.
             </p>
             <div className="flex flex-wrap gap-2 mt-3">
               {["No middlemen", "On-chain verified", "Instant release"].map((t) => (
@@ -343,12 +343,32 @@ export function EscrowPanel({ bookingId, priceUsd, guideWallet, onSuccess }: Esc
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3"
+              className={`${
+                errorMsg.includes('confirmed') || errorMsg.includes('proceed')
+                  ? 'bg-blue-50 border-blue-200'
+                  : 'bg-red-50 border-red-200'
+              } border rounded-2xl p-4 flex items-start gap-3`}
             >
-              <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+              <AlertCircle className={`w-5 h-5 ${
+                errorMsg.includes('confirmed') || errorMsg.includes('proceed')
+                  ? 'text-blue-500'
+                  : 'text-red-500'
+              } shrink-0 mt-0.5`} />
               <div>
-                <p className="text-sm font-semibold text-red-700">Transaction Failed</p>
-                <p className="text-xs text-red-500 mt-0.5">{errorMsg}</p>
+                <p className={`text-sm font-semibold ${
+                  errorMsg.includes('confirmed') || errorMsg.includes('proceed')
+                    ? 'text-blue-700'
+                    : 'text-red-700'
+                }`}>
+                  {errorMsg.includes('confirmed') || errorMsg.includes('proceed')
+                    ? 'Escrow Not Available'
+                    : 'Transaction Failed'}
+                </p>
+                <p className={`text-xs mt-0.5 ${
+                  errorMsg.includes('confirmed') || errorMsg.includes('proceed')
+                    ? 'text-blue-500'
+                    : 'text-red-500'
+                }`}>{errorMsg}</p>
               </div>
             </motion.div>
           )}

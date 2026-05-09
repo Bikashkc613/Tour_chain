@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { TrendingUp, TrendingDown, Star, Users, DollarSign, BarChart3, AlertCircle } from "lucide-react";
+import { WalletLinkCard } from "@/components/WalletLinkCard";
 
 type Booking = {
   id: string;
@@ -150,6 +151,9 @@ export default function OperatorDashboard() {
         {/* ── ANALYTICS TAB ── */}
         {tab === "analytics" && (
           <div className="space-y-6">
+            {/* Wallet Link Card */}
+            <WalletLinkCard />
+            
             {/* KPI cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[

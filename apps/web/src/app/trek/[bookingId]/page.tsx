@@ -236,7 +236,7 @@ export default function TrekPage() {
                     bookingId={bookingId}
                     placeId={cp.place.id}
                     placeName={cp.place.name}
-                    onSuccess={(checkin: Checkin) => {
+                    onSuccess={(checkin) => {
                       setCheckins((prev) => [{ ...checkin, place_id: cp.place.id }, ...prev]);
                       setInfo(`✅ Checked in at ${cp.place.name}`);
                     }}
