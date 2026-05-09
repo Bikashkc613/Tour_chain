@@ -120,10 +120,22 @@ export const POST = handle(ComprehensivePlannerInput, async (body) => {
     const places = placesResult.data || [];
     const routes = routesResult.data || [];
 
+    // Transform guides to match Guide type
+    const transformedGuides: Guide[] = guides.map(g => ({
+      id: g.id,
+      name: (g.users as { name?: string } | null)?.name || "Guide",
+      rating: g.rating || 0,
+      total_reviews: g.total_reviews || 0,
+      specialties: g.specialties || [],
+      price_per_day: 50, // Default price, should come from database
+      verified: g.verified || false,
+      experience_years: g.experience_years || 0,
+    }));
+
     // Prepare context for AI
     const contextData = {
-      available_guides: guides.map(g => ({
-        name: (g.users as { name?: string } | null)?.name || "Guide",
+      available_guides: transformedGuides.map(g => ({
+        name: g.name,
         specialties: g.specialties,
         rating: g.rating,
         reviews: g.total_reviews,
@@ -152,7 +164,7 @@ export const POST = handle(ComprehensivePlannerInput, async (body) => {
       // Return comprehensive demo data
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      return jsonOk(createDemoComprehensivePlan(query, guides, places, routes));
+      return jsonOk(createDemoComprehensivePlan(query, transformedGuides, places, routes));
     }
 
     // Call Gemini API with comprehensive context
